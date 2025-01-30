@@ -1,8 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client-js"
@@ -13,75 +9,66 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id          String   @id @default(uuid())
-  firstName   String
-  lastName    String
-  userName    String   @unique
-  mail        String   @unique
-  birthDate   DateTime
-  msisdn      String   @unique
-  verified    Verified? @relation(fields: [verifiedId], references: [id])
-  verifiedId  String?  @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
-  lastLogin   DateTime?
-  status      Status
+model User{
+  id String @id @default(uuid())
+  first_name String
+  last_name String
+  user_name String @unique
+  mail String @unique
+  birth_date DateTime
+  msisdn String @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  deleted_at DateTime?
+  last_login DateTime?
+  status Status? @default(ACTIVE)
+  password Password?
+  roles UserRole[]
+  verification Verified?
+  tokens Token[]
 
-  password    Password?
-  userRoles   UserRole[]
-  tokens      Token[]
+}
+model Password{
+  user User @relation(fields:[user_id], references: [id], onDelete: Cascade)
+  user_id String @unique
+  password_hash String
+  password_salt String @unique
+  updated_at DateTime @updatedAt
+}
+model Role{
+  id String @id @default(uuid())
+  role_name String @unique
+  user_roles UserRole[]
+}
+model UserRole{
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id String @unique
+  role Role @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  role_id String @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  deleted_at DateTime?
+}
+model Verified{
+ user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+ user_id String @unique
+ mail_verified Boolean @default(false)
+ phone_verified Boolean @default(false)
+ mail_verified_at DateTime?
+ phone_verified_at DateTime?
+}
+model Token{
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id String 
+  token String @unique
+  refresh_token String @unique
+  device_info String?
+  ip_address String?
+  created_at DateTime @default(now())
+  expires_at DateTime
 }
 
-model Password {
-  id          String  @id @default(uuid())
-  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String  @unique
-  passwordHash String
-  passwordSalt String
-  updatedAt   DateTime @updatedAt
-}
-
-model Role {
-  id        String    @id @default(uuid())
-  name      String    @unique
-  userRoles UserRole[]
-}
-
-model UserRole {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  roleId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-}
-
-model Verified {
-  id               String   @id @default(uuid())
-  emailVerified    Boolean  @default(false)
-  emailVerifiedAt  DateTime?
-  phoneVerified    Boolean  @default(false)
-  phoneVerifiedAt  DateTime?
-  user             User?
-}
-
-model Token {
-  id          String   @id @default(uuid())
-  token       String
-  refreshToken String?
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
-  deviceInfo  String?
-  ipAddress   String?
-  createdAt   DateTime @default(now())
-  expiresAt   DateTime
-}
-
-enum Status {
+enum Status{
   ACTIVE
   INACTIVE
   BANNED

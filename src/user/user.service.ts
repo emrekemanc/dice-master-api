@@ -1,46 +1,47 @@
 import { Injectable } from '@nestjs/common';
-import { Status } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateUserDto } from './dto/user.dto';
 
 @Injectable()
 export class UserService {
     constructor(protected prismaService: PrismaService){}
 
-    async createUser(
-        firstName: string,
-        lastName: string,
-        userName: string,
-        mail: string,
-        birthDate: Date,
-        msisdn: string,
-        status: Status = Status.ACTIVE
-    ){
-        return this.prismaService.user.create({
-            data: {
-                firstName,
-                lastName,
-                userName,
-                mail,
-                birthDate,
-                msisdn,
-                status,
-            },
+    async createUser(createUserDto: CreateUserDto){
+        try{return this.prismaService.user.create({
+            data: createUserDto,
         });
+        }catch(e){
+        console.log(e);
+      }
     }
 
     async getUserById(userId: string){
-        const user = await this.prismaService.user.findUnique({
+        try{ const user = await this.prismaService.user.findUnique({
             where: {id: userId}
-        })
+        }) as CreateUserDto;
+
         if(!user){
-            throw new Error("User Not Found")
+            throw new Error("User Not Found");
         }
-        return user
+        return user;
+    }catch(e){
+      console.log(e);
     }
+    }
+
     async getUserByUserName(userName: string){
-        const user = await this.prismaService.user.findUnique({
-            where: {userName: userName}
-        })
+        try{ const user = await this.prismaService.user.findUnique({
+            where: {user_name: userName}
+        }) as CreateUserDto;
+
+        if(!user){
+            throw new Error("User Not Found");
+        }
+        return user;
+    }catch(e){
+      console.log(e);
+    }
+       
     }
 
 }
