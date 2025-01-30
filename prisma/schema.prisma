@@ -10,5 +10,80 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("postgresql://user:password@localhost:5432/dice_master_db")
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  firstName   String
+  lastName    String
+  userName    String   @unique
+  mail        String   @unique
+  birthDate   DateTime
+  msisdn      String   @unique
+  verified    Verified? @relation(fields: [verifiedId], references: [id])
+  verifiedId  String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  lastLogin   DateTime?
+  status      Status
+
+  password    Password?
+  userRoles   UserRole[]
+  tokens      Token[]
+}
+
+model Password {
+  id          String  @id @default(uuid())
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String  @unique
+  passwordHash String
+  passwordSalt String
+  updatedAt   DateTime @updatedAt
+}
+
+model Role {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  userRoles UserRole[]
+}
+
+model UserRole {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+}
+
+model Verified {
+  id               String   @id @default(uuid())
+  emailVerified    Boolean  @default(false)
+  emailVerifiedAt  DateTime?
+  phoneVerified    Boolean  @default(false)
+  phoneVerifiedAt  DateTime?
+  user             User?
+}
+
+model Token {
+  id          String   @id @default(uuid())
+  token       String
+  refreshToken String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  deviceInfo  String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  BANNED
+  DELETED
 }
